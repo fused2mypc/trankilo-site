@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Change Language</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="dvd-page">
+
+  <div class="bg-layer">
+    <video class="background-video" autoplay muted loop playsinline preload="auto">
+      <source src="assets/loop_forest_v3.mp4" type="video/mp4" />
+    </video>
+  </div>
+
+  <div class="menu-container">
+    <a href="#" class="menu-button lang-link" data-lang="en" data-text-key="en"></a>
+    <a href="#" class="menu-button lang-link" data-lang="es" data-text-key="es"></a>
+    <a href="#" class="menu-button lang-link" data-lang="fr" data-text-key="fr"></a>
+    <a href="#" class="menu-button lang-link" data-lang="pl" data-text-key="pl"></a>
+    <div class="menu-spacer"></div>
+    <a href="index.html" class="menu-button" data-text-key="menu"></a>
+  </div>
+
+  <script src="js/language.js"></script>
+  <script src="js/keyboard.js"></script>
+
+</body>
+</html>
