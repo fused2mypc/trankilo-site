@@ -15,7 +15,7 @@ function getSelectable() {
   }
 
   return Array.from(
-    document.querySelectorAll(".menu-button, .scene-card")
+    document.querySelectorAll(".menu-button, .project-card")
   );
 }
 

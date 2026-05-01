@@ -3,7 +3,7 @@
 (function () {
   const FADE_DURATION = 0.1; // seconds for fade
   const PLAY_TIME = 2;       // seconds to play video before navigation
-  const CLICKABLE_SELECTORS = ".menu-button, .scene-card";
+  const CLICKABLE_SELECTORS = ".menu-button, .project-card";
 
   // Helper: fade an element
   function fadeElement(el, duration) {

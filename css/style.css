@@ -9,8 +9,8 @@
 
 button:focus,
 button:focus-visible,
-.scene-card:focus,
-.scene-card:focus-visible,
+.project-card:focus,
+.project-card:focus-visible,
 a:focus,
 a:focus-visible {
   outline: none;
@@ -89,7 +89,7 @@ body > *:not(.bg-layer) {
 }
 
 .menu-button.active,
-.scene-card.active {
+.project-card.active {
   transform: scale(1.08);
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
@@ -120,6 +120,7 @@ body > *:not(.bg-layer) {
 
 .carousel-section {
   height: 100vh;
+  width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   display: flex;
@@ -164,57 +165,64 @@ body > *:not(.bg-layer) {
   line-height: 1.4;
 }
 
+.carousel .video-container iframe {
+  opacity: 1;
+}
+
 .video-container iframe {
-  opacity: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
 }
 
 /* =========================
-   Scene Layout
+   Project Layout
    ========================= */
 :root {
-  --scene-thumb-width: clamp(150px, 18vw, 240px);
-  --scene-gap: 24px;
+  --project-thumb-width: clamp(150px, 18vw, 240px);
+  --project-gap: 24px;
 }
 
-.scene-list {
+.project-list {
   padding: 80px 60px;
   display: flex;
   flex-direction: column;
-  gap: var(--scene-gap);
+  gap: var(--project-gap);
 }
 
-.scene-card {
+.project-card {
   display: flex;
-  gap: var(--scene-gap);
+  gap: var(--project-gap);
   align-items: flex-start;
   cursor: pointer;
   transition: transform 0.18s ease, opacity 0.18s ease;
-  width: var(--scene-thumb-width);
+  width: var(--project-thumb-width);
 }
 
-.scene-card:hover {
+.project-card:hover {
   transform: scale(1.015);
 }
 
-.scene-card:active {
+.project-card:active {
   transform: scale(1.03);
 }
 
-.scene-thumbnail {
-  flex: 0 0 var(--scene-thumb-width);
+.project-thumbnail {
+  flex: 0 0 var(--project-thumb-width);
   display: flex;
   align-items: flex-start;
   justify-content: center;
   overflow: hidden;
 }
 
-.scene-thumbnail img {
+.project-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.scene-info {
+.project-info {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -222,7 +230,7 @@ body > *:not(.bg-layer) {
   white-space: normal; /* wrap titles & descriptions */
 }
 
-.scene-title {
+.project-title {
   font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
@@ -231,7 +239,7 @@ body > *:not(.bg-layer) {
   margin-bottom: 4px;
 }
 
-.scene-description {
+.project-description {
   font-size: 0.6rem;
   line-height: 1.3;
   opacity: 0.7;
@@ -243,7 +251,7 @@ body > *:not(.bg-layer) {
   overflow: hidden;
 }
 
-.scene-runtime {
+.project-runtime {
   font-size: 0.75rem;
   opacity: 0.5;
 }

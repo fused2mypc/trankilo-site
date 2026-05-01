@@ -3,20 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>dead</title>
+  <title>Main Menu</title>
+
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon_io/favicon-16x16.png">  <!-- Standard favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon_io/favicon-32x32.png">
+  <link rel="shortcut icon" href="assets/favicon_io/favicon.ico">  <!-- Legacy favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon_io/apple-touch-icon.png">  <!-- Apple touch icon (iOS / iPadOS) -->
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon_io/android-chrome-192x192.png">  <!-- Android Chrome / PWA icons -->
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon_io/android-chrome-512x512.png">
+  <link rel="manifest" href="assets/favicon_io/site.webmanifest">  <!-- Web manifest for PWA -->
+
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body class="dvd-page">
   <div class="bg-layer">
-    <video class="background-video" autoplay muted loop playsinline preload="auto">
-      <source src="assets/loop_v2.mp4" type="video/mp4" />
+    <video class="background-video" autoplay muted loop playsinline preload="metadata">
+      <source src="assets/loop_v1.mp4" type="video/mp4" />
     </video>
   </div>
 
 <div class="page-content">
   <div class="menu-container">
-    <a class="menu-button" href="play.html?start=0" data-text-key="play"></a>
-    <a class="menu-button" href="scenes.html" data-text-key="scenes"></a>
+    <a class="menu-button" href="reel.html?start=0" data-text-key="reel"></a>
+    <a class="menu-button" href="play.html?start=0" data-text-key="playAll"></a>
+    <a class="menu-button" href="projects.html" data-text-key="projects"></a>
     <a class="menu-button" href="special.html" data-text-key="special"></a>
   </div>
 </div>
@@ -24,7 +35,6 @@
     <script src="js/menu.js"></script>
     <script src="js/keyboard.js"></script>
     <script src="js/language.js"></script>
-    <script src="js/menu.js"></script>
 
 </body>
 </html>

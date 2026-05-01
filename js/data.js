@@ -1,7 +1,3 @@
-// data.js
-// Refactored: centralized categories + localized video data
-// Date: 2026-04-29
-
 (function (global) {
   const fallbackLang = "en";
   const supportedLangs = ["en", "es", "fr", "pl"];
@@ -16,22 +12,19 @@
     experimental: { en: "experimental", es: "experimental", fr: "expérimental", pl: "eksperymentalny" },
     "sci-fi": { en: "sci-fi", es: "ciencia ficción", fr: "science-fiction", pl: "sci-fi" },
     VFX: { en: "VFX", es: "VFX", fr: "VFX", pl: "VFX" },
+    documentary: { en: "documentary", es: "documental", fr: "documentaire", pl: "film dokumentalny" },
     // add new category keys here
   };
 
-  // Raw video entries: videos can reference category by:
-  // - category: "horror"  (category key referencing categoryDefs)
-  // - category: { en: "...", es: "..."}  (inline translations)
-  // - category: "Some single string" (treated as inline string applied to all langs)
-  // Reel must remain index 0.
   const rawVideoData = [
     {
       id: "989193003",
       title: { en: "Showreel 2023", es: "Reel 2023", fr: "Bande démo 2023", pl: "Showreel 2023" },
-      category: "compilation",
+      category: "",
       description: { en: "", es: "", fr: "", pl: "" },
       runtime: "01:00",
-      thumbnail: "assets/thumbnails/showreel2023.jpg"
+      thumbnail: "assets/thumbnails/showreel2023.jpg",
+	    reel: true
     },
     {
       id: "916557359",
@@ -57,6 +50,15 @@
       description: { en: "", es: "", fr: "", pl: "" },
       runtime: "04:12",
       thumbnail: "assets/thumbnails/embedded.png"
+    },
+    {
+      id: "1174561238",
+      hash: "3613163b70",
+      title: { en: "Forging Artistry", es: "Forjando la creatividad", fr: "Forger l'art", pl: "Kuźnia twórczości" },
+      category: "documentary",
+      description: "",
+      runtime: "04:13",
+      thumbnail: "assets/thumbnails/forgingartistry.jpg"
     },
     {
       id: "1174561238",
@@ -149,34 +151,34 @@
     }
   ];
 
-  // ---- Normalizers ----
+  // ----------------------------
+  // NORMALIZATION
+  // ----------------------------
   function normalizeTranslations(field) {
     if (typeof field === "string") {
       const out = {};
-      supportedLangs.forEach((l) => (out[l] = field));
+      supportedLangs.forEach(l => out[l] = field);
       return out;
     }
+
     const out = {};
-    supportedLangs.forEach((l) => {
+    supportedLangs.forEach(l => {
       if (field && typeof field[l] === "string") out[l] = field[l];
       else if (field && typeof field[fallbackLang] === "string") out[l] = field[fallbackLang];
       else {
-        const available = field && Object.values(field).find(v => typeof v === "string");
-        out[l] = available || "";
+        const fallback = field && Object.values(field).find(v => typeof v === "string");
+        out[l] = fallback || "";
       }
     });
+
     return out;
   }
 
-  // Normalize categoryDefs into full translation objects
   const categoryDefs = {};
-  Object.keys(categoryDefsRaw).forEach((key) => {
+  Object.keys(categoryDefsRaw).forEach(key => {
     categoryDefs[key] = normalizeTranslations(categoryDefsRaw[key]);
   });
 
-  // Resolve a category field for an entry:
-  // - if entry.category is a key present in categoryDefs, return that translations object
-  // - else normalize entry.category (string or inline object)
   function resolveCategoryField(categoryField) {
     if (typeof categoryField === "string" && categoryDefs[categoryField]) {
       return categoryDefs[categoryField];
@@ -184,19 +186,32 @@
     return normalizeTranslations(categoryField || "");
   }
 
-  // Normalize an entire video entry
-  function normalizeEntry(entry) {
-    const e = Object.assign({}, entry);
-    e.title = normalizeTranslations(e.title || "");
-    e.category = resolveCategoryField(e.category || "");
-    e.description = normalizeTranslations(e.description || "");
-    return e;
-  }
+function normalizeEntry(entry) {
+  return {
+    ...entry,
+    title: normalizeTranslations(entry.title || ""),
+    category: resolveCategoryField(entry.category || ""),
+    description: normalizeTranslations(entry.description || ""),
+    reel: !!entry.reel   // ensure it's a boolean, default false
+  };
+}
 
-  // Build normalized videoData array
   const videoData = rawVideoData.map(normalizeEntry);
 
-  // ---- Helpers ----
+  // ----------------------------
+  // DATASETS (NEW CLEAN LAYER)
+  // ----------------------------
+  const videoSets = {
+    all: videoData,
+
+    reel: rawVideoData.filter(v => v.reel === true).length
+      ? rawVideoData.filter(v => v.reel === true).map(normalizeEntry)
+      : [videoData[0]] // fallback: first item is reel
+  };
+
+  // ----------------------------
+  // HELPERS
+  // ----------------------------
   function getLocalized(item, fieldName, lang = fallbackLang) {
     if (!item || !fieldName) return "";
     const field = item[fieldName];
@@ -206,48 +221,54 @@
   }
 
   function addCategory(key, translations) {
-    if (!key || typeof key !== "string") throw new TypeError("Category key required");
     categoryDefs[key] = normalizeTranslations(translations || key);
-    // update existing video entries that reference this key (if any)
+
     videoData.forEach((v, i) => {
-      const raw = rawVideoData[i] && rawVideoData[i].category;
-      if (raw === key) {
-        v.category = categoryDefs[key];
-      }
+      const raw = rawVideoData[i]?.category;
+      if (raw === key) v.category = categoryDefs[key];
     });
+
     return categoryDefs[key];
   }
 
   function addEntry(entry) {
-    const normalized = normalizeEntry(entry);
     rawVideoData.push(entry);
+    const normalized = normalizeEntry(entry);
     videoData.push(normalized);
     return normalized;
   }
 
-  function replaceAll(newRawData, enforceReelFirst = true) {
+  function replaceAll(newRawData) {
     if (!Array.isArray(newRawData)) throw new TypeError("replaceAll expects an array");
-    const normalized = newRawData.map(normalizeEntry);
+
     rawVideoData.length = 0;
-    newRawData.forEach((r) => rawVideoData.push(r));
+    newRawData.forEach(v => rawVideoData.push(v));
+
     videoData.length = 0;
-    normalized.forEach((n) => videoData.push(n));
-    return videoData;
+    newRawData.map(normalizeEntry).forEach(v => videoData.push(v));
   }
 
-  // Public API
+  // ----------------------------
+  // PUBLIC API
+  // ----------------------------
   const API = {
     videoData,
-    categoryDefs, // normalized category translations keyed by category key
-    getLocalized, // getLocalized(item, "category"| "title" | "description", lang)
-    addCategory,  // addCategory(key, translations)
+    videoSets,
+
+    categoryDefs,
+    getLocalized,
+
+    addCategory,
     addEntry,
     replaceAll,
-    supportedLangs: supportedLangs.slice(),
+
+    supportedLangs: [...supportedLangs],
     fallbackLang
   };
 
   global.videoDataModule = API;
   global.videoData = API.videoData;
+  global.videoSets = API.videoSets;
   global.categoryDefs = API.categoryDefs;
+
 })(window);

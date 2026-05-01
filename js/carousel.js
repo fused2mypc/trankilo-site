@@ -5,20 +5,33 @@ const startIndex = parseInt(params.get("start")) || 0;
 let activePlayer = null;
 let activePlayerIndex = null;
 
-const mode = params.get("mode") === "scene" ? "scene" : "all";
+const isReelPage = document.body.classList.contains("reel-page");
+const mode = isReelPage ? "reel" : "all";
 
 const ACTIVATION_DELAY = 300;
 let activationTimer = null;
 let activationLocked = false;
 
 const currentLang = localStorage.getItem("siteLanguage") || "en";
+const hasReel = mode === "reel"; // Only reel page shows 'play again'
 
 // ----------------------------
 // Build Carousel
 // ----------------------------
 
+let carouselVideos = []; // store filtered videos for this carousel
+
 function buildCarousel() {
-  window.videoData.forEach((video, index) => {
+  const isReelPage = document.body.classList.contains("reel-page");
+
+  // Filter videos according to mode
+  carouselVideos = window.videoData.filter(video => {
+    if (mode === "reel") return video.reel === true;   // Reel page: only reel
+    return !video.reel;                                 // Play all: exclude reel
+  });
+
+  // Build sections
+  carouselVideos.forEach((video, index) => {
     const section = document.createElement("div");
     section.classList.add("carousel-section");
     section.dataset.index = index;
@@ -33,14 +46,13 @@ function buildCarousel() {
     loader.innerText = "Loading...";
     videoContainer.appendChild(loader);
 
-    // Metadata block
+    // Metadata
     const meta = document.createElement("div");
     meta.classList.add("video-meta");
-
     meta.innerHTML = `
-            <h2 class="video-title">${video.title[currentLang]}</h2>
-            <span class="video-category">${video.category[currentLang]}</span>
-            <p class="video-description">${video.description[currentLang]}</p>
+      <h2 class="video-title">${video.title[currentLang]}</h2>
+      <span class="video-category">${video.category[currentLang]}</span>
+      <p class="video-description">${video.description[currentLang]}</p>
     `;
 
     // Append in order
@@ -54,12 +66,11 @@ function buildCarousel() {
   endSection.classList.add("carousel-section", "end-section");
 
   endSection.innerHTML = `
-  <button class="menu-button menu-return" onclick="window.location.href='index.html'">
-    menu
-  </button>
+    <button class="menu-button menu-return" onclick="window.location.href='index.html'">
+      menu
+    </button>
   `;
-
-carousel.appendChild(endSection);
+  carousel.appendChild(endSection);
 }
 
 buildCarousel();
@@ -70,7 +81,7 @@ buildCarousel();
 
 const nav = document.querySelector(".chapter-nav");
 
-window.videoData.forEach((_, index) => {
+carouselVideos.forEach((_, index) => {
   const dot = document.createElement("div");
   dot.classList.add("chapter-dot");
 
@@ -100,7 +111,7 @@ function activateVideo(index) {
 
   if (activePlayerIndex === index) return;
 
-  const video = window.videoData[index];
+  const video = carouselVideos[index];  // instead of window.videoData[index]
   const container = document.getElementById(`video-${index}`);
   
   if (!container) return;
