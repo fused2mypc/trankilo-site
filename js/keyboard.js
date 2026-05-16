@@ -10,7 +10,7 @@ const LOCK_TIME = 320;
 
 function getSelectable() {
 
-  if (document.body.classList.contains("play-page")) {
+  if (document.body.classList.contains("reel-page")) {
     return [];
   }
 

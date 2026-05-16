@@ -1,266 +1,294 @@
-const carousel = document.getElementById("carousel");
-const params = new URLSearchParams(window.location.search);
-const startIndex = parseInt(params.get("start")) || 0;
+// carousel.js - refactored, encapsulated, DOM-ready safe implementation
 
-let activePlayer = null;
-let activePlayerIndex = null;
+(() => {
+  // Config
+  const ACTIVATION_DELAY = 300;
+  const IFRAME_LOAD_TIMEOUT = 8000;
+  const DEFAULT_LANG = "en";
 
-const isReelPage = document.body.classList.contains("reel-page");
-const mode = isReelPage ? "reel" : "all";
+  // Parse URL params safely
+  const params = new URLSearchParams(window.location.search);
+  const startParamRaw = params.get("start");
+  const startIndexParam = startParamRaw === null ? null : Number.parseInt(startParamRaw, 10);
+  const startId = params.get("startId") || null;
+  const mode = params.get("mode") || "select";
+  const isAutoplay = mode === "all";
+  const currentLang = localStorage.getItem("siteLanguage") || DEFAULT_LANG;
 
-const ACTIVATION_DELAY = 300;
-let activationTimer = null;
-let activationLocked = false;
-
-const currentLang = localStorage.getItem("siteLanguage") || "en";
-const hasReel = mode === "reel"; // Only reel page shows 'play again'
-
-// ----------------------------
-// Build Carousel
-// ----------------------------
-
-let carouselVideos = []; // store filtered videos for this carousel
-
-function buildCarousel() {
-  const isReelPage = document.body.classList.contains("reel-page");
-
-  // Filter videos according to mode
-  carouselVideos = window.videoData.filter(video => {
-    if (mode === "reel") return video.reel === true;   // Reel page: only reel
-    return !video.reel;                                 // Play all: exclude reel
-  });
-
-  // Build sections
-  carouselVideos.forEach((video, index) => {
-    const section = document.createElement("div");
-    section.classList.add("carousel-section");
-    section.dataset.index = index;
-
-    // Video container
-    const videoContainer = document.createElement("div");
-    videoContainer.classList.add("video-container");
-    videoContainer.id = `video-${index}`;
-
-    const loader = document.createElement("div");
-    loader.classList.add("loader");
-    loader.innerText = "Loading...";
-    videoContainer.appendChild(loader);
-
-    // Metadata
-    const meta = document.createElement("div");
-    meta.classList.add("video-meta");
-    meta.innerHTML = `
-      <h2 class="video-title">${video.title[currentLang]}</h2>
-      <span class="video-category">${video.category[currentLang]}</span>
-      <p class="video-description">${video.description[currentLang]}</p>
-    `;
-
-    // Append in order
-    section.appendChild(videoContainer);
-    section.appendChild(meta);
-    carousel.appendChild(section);
-  });
-
-  // End section
-  const endSection = document.createElement("div");
-  endSection.classList.add("carousel-section", "end-section");
-
-  endSection.innerHTML = `
-    <button class="menu-button menu-return" onclick="window.location.href='index.html'">
-      menu
-    </button>
-  `;
-  carousel.appendChild(endSection);
-}
-
-buildCarousel();
-
-// ----------------------------
-// Chapter timeline navigation
-// ----------------------------
-
-const nav = document.querySelector(".chapter-nav");
-
-carouselVideos.forEach((_, index) => {
-  const dot = document.createElement("div");
-  dot.classList.add("chapter-dot");
-
-  dot.addEventListener("click", () => {
-    document.querySelectorAll(".carousel-section")[index]
-      .scrollIntoView({ behavior: "auto" });
-  });
-
-  nav.appendChild(dot);
-});
-
-function updateActiveDot(index) {
-  const dots = document.querySelectorAll(".chapter-dot");
-
-  dots.forEach(dot => dot.classList.remove("active"));
-
-  if (dots[index]) {
-    dots[index].classList.add("active");
-  }
-}
-
-// ----------------------------
-// Load Vimeo Video
-// ----------------------------
-
-function activateVideo(index) {
-
-  if (activePlayerIndex === index) return;
-
-  const video = carouselVideos[index];  // instead of window.videoData[index]
-  const container = document.getElementById(`video-${index}`);
-  
-  if (!container) return;
-  if (container.querySelector("iframe")) return;
-
-  // Destroy previous player
-  if (activePlayer) {
-    activePlayer.pause().catch(() => {});
-    activePlayer.unload().catch(() => {});
-    activePlayer = null;
-  }
-
-  document.querySelectorAll(".video-container iframe").forEach(f => {
-    f.remove();
-  });
-  
-container.innerHTML = "";
-
-const loader = document.createElement("div");
-loader.className = "loader";
-loader.textContent = "Loading…";
-
-container.appendChild(loader);
-
-  const iframe = document.createElement("iframe");
-
-const autoplay = mode === "all" ? 1 : 0;
-
-  // Build Vimeo URL
-  // If video.hash exists, append it as ?h=HASH
-  let vimeoSrc = `https://player.vimeo.com/video/${video.id}?autoplay=${autoplay}&muted=1&playsinline=1&title=0&byline=0&portrait=0`;
-  if (video.hash) {
-    vimeoSrc += `&h=${video.hash}`;
-  }
-
-  iframe.src = vimeoSrc;
-  
-  iframe.allow = "fullscreen";
-  iframe.allowFullscreen = true;
-
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  iframe.style.border = "none";
-
-  container.appendChild(iframe);
-
-  const player = new Vimeo.Player(iframe);
-
-  player.on("loaded", () => {
-
-    const loader = container.querySelector(".loader");
-    if (loader) loader.remove();
-
-    iframe.style.opacity = "0";
-    iframe.style.transition = "opacity 0.4s ease";
-
-    requestAnimationFrame(() => {
-      iframe.style.opacity = "1";
+  // Utility helpers
+  const safeText = (value) => (value == null ? "" : String(value));
+  const chooseLang = (obj) => (obj && obj[currentLang]) ? obj[currentLang] : (obj && obj[DEFAULT_LANG]) || "";
+  const createEl = (tag, attrs = {}, children = []) => {
+    const el = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (v === null) return;
+      if (k === "class") el.className = v;
+      else if (k === "text") el.textContent = v;
+      else el.setAttribute(k, v);
     });
+    children.forEach(c => el.appendChild(c));
+    return el;
+  };
 
-  });
+  class Carousel {
+    constructor({ rootSelector = "#carousel", navSelector = ".chapter-nav" } = {}) {
+      this.root = null;
+      this.nav = null;
+      this.rootSelector = rootSelector;
+      this.navSelector = navSelector;
 
-  // autoplay chain
-  player.on("ended", () => {
+      this.videoData = null;        // original data
+      this.carouselVideos = [];     // filtered list
+      this.activePlayerIndex = null;
 
-    if (mode !== "all") return;
+      this.observer = null;
+      this.activationTimer = null;
+      this.activationLocked = false;
 
-    const nextSection = document.querySelector(
-      `.carousel-section[data-index="${index + 1}"]`
-    );
-
-    if (nextSection) {
-
-      setTimeout(() => {
-        nextSection.scrollIntoView({ behavior: "auto" });
-      }, 200);
-
-    } else {
-
-      window.location.href = "index.html";
-
+      this.resolvedStartIndex = 0;
     }
 
-  });
-
-  activePlayer = player;
-  activePlayerIndex = index;
-}
-
-// ----------------------------
-// Intersection Observer
-// ----------------------------
-
-const observer = new IntersectionObserver(
-  (entries) => {
-
-    entries.forEach(entry => {
-
-      if (entry.isIntersecting && !activationLocked) {
-
-        activationLocked = true;
-
-        setTimeout(() => {
-          activationLocked = false;
-        }, 300);
-
-        const index = parseInt(entry.target.dataset.index);
-
-        if (isNaN(index)) return;
-
-        clearTimeout(activationTimer);
-
-        activationTimer = setTimeout(() => {
-
-          updateActiveDot(index);
-          activateVideo(index);
-
-        }, ACTIVATION_DELAY);
-
+    async init() {
+      // Wait for DOM ready
+      if (document.readyState === "loading") {
+        await new Promise(res => document.addEventListener("DOMContentLoaded", res, { once: true }));
       }
 
-    });
+      this.root = document.querySelector(this.rootSelector);
+      this.nav = document.querySelector(this.navSelector);
 
-  },
-  {
-    threshold: 0.65
+      if (!this.root) {
+        console.error("Carousel root element not found:", this.rootSelector);
+        return;
+      }
+
+      // Wait until window.videoData exists (poll via rAF)
+      await this.waitForVideoData();
+
+      this.videoData = window.videoData || [];
+      this.filterVideos();
+      this.buildSections();
+      this.buildNavDots();
+      this.setupObserver();
+      this.resolveStartIndexAndActivate();
+      this.handleUnload();
+    }
+
+    waitForVideoData() {
+      return new Promise(resolve => {
+        const check = () => {
+          if (window.videoData) return resolve();
+          requestAnimationFrame(check);
+        };
+        check();
+      });
+    }
+
+    filterVideos() {
+      // Normalize mode values and support legacy reel param
+      const reelParam = params.get("reel");
+      const normalizedMode = String(mode || "").toLowerCase();
+
+      // Determine intended mode:
+      // - "reel": only videos marked reel === true
+      // - "all": all videos
+      // - "select": non-reel (default for selection pages)
+      // Backwards-compatible: ?reel=1 or ?reel=true forces reel mode.
+      const wantReel = normalizedMode === "reel" || reelParam === "1" || reelParam === "true";
+      const wantAll = normalizedMode === "all";
+
+      if (wantReel) {
+        this.carouselVideos = this.videoData.filter(v => Boolean(v.reel) === true);
+      } else if (wantAll) {
+        this.carouselVideos = Array.isArray(this.videoData) ? this.videoData.slice() : [];
+      } else {
+        // default to "select" behavior: show non-reel items
+        this.carouselVideos = this.videoData.filter(v => !v.reel);
+      }
+    }
+
+
+    buildSections() {
+      // Clear existing content
+      this.root.innerHTML = "";
+
+      this.carouselVideos.forEach((video, index) => {
+        const section = createEl("section", { class: "carousel-section", "data-index": String(index) });
+
+        // video container
+        const videoContainer = createEl("div", { class: "video-container", id: `video-${index}` });
+        const loader = createEl("div", { class: "loader", text: "Loading..." });
+        videoContainer.appendChild(loader);
+
+        // metadata using safe text nodes (avoid innerHTML/XSS)
+        const meta = createEl("div", { class: "video-meta" });
+        const titleEl = createEl("h2", { class: "video-title", text: chooseLang(video.title) });
+        const categoryEl = createEl("span", { class: "video-category", text: chooseLang(video.category) });
+        const descEl = createEl("p", { class: "video-description", text: chooseLang(video.description) });
+
+        meta.appendChild(titleEl);
+        meta.appendChild(categoryEl);
+        meta.appendChild(descEl);
+
+        section.appendChild(videoContainer);
+        section.appendChild(meta);
+
+        this.root.appendChild(section);
+      });
+
+      // end section (menu)
+      const endSection = createEl("section", { class: "carousel-section end-section" });
+      const menuButton = createEl("button", { class: "menu-button menu-return", type: "button", text: "menu" });
+      menuButton.addEventListener("click", () => { window.location.href = "index.html"; });
+      endSection.appendChild(menuButton);
+      this.root.appendChild(endSection);
+    }
+
+    buildNavDots() {
+      if (!this.nav) return;
+      this.nav.innerHTML = "";
+
+      this.carouselVideos.forEach((_, index) => {
+        const dot = createEl("button", {
+          class: "chapter-dot",
+          type: "button",
+          "aria-label": `Go to chapter ${index + 1}`
+        });
+        dot.addEventListener("click", () => this.scrollToIndex(index));
+        dot.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dot.click(); }
+        });
+        this.nav.appendChild(dot);
+      });
+    }
+
+    setupObserver() {
+      // Disconnect old observer if exists
+      if (this.observer) this.observer.disconnect();
+
+      this.observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !this.activationLocked) {
+            this.activationLocked = true;
+            setTimeout(() => { this.activationLocked = false; }, ACTIVATION_DELAY);
+
+            const index = Number.parseInt(entry.target.dataset.index, 10);
+            if (Number.isNaN(index)) return;
+
+            clearTimeout(this.activationTimer);
+            this.activationTimer = setTimeout(() => {
+              this.updateActiveDot(index);
+              this.activateVideo(index);
+            }, ACTIVATION_DELAY);
+          }
+        });
+      }, { threshold: 0.65 });
+
+      // Observe sections (exclude end-section)
+      this.root.querySelectorAll(".carousel-section:not(.end-section)").forEach(section => {
+        this.observer.observe(section);
+      });
+    }
+
+    scrollToIndex(index) {
+      const section = this.root.querySelector(`.carousel-section[data-index="${index}"]`);
+      if (section) section.scrollIntoView({ behavior: "auto" });
+    }
+
+    updateActiveDot(index) {
+      const dots = document.querySelectorAll(".chapter-dot");
+      dots.forEach(d => d.classList.remove("active"));
+      if (dots[index]) dots[index].classList.add("active");
+    }
+
+    activateVideo(index) {
+      if (this.activePlayerIndex === index) return;
+      const video = this.carouselVideos[index];
+      if (!video) return;
+
+      const container = document.getElementById(`video-${index}`);
+      if (!container) return;
+
+      // Remove only if iframe exists, avoid full innerHTML wipe
+      const existingIframe = container.querySelector("iframe");
+      if (existingIframe) existingIframe.remove();
+
+      // Clear container children and add loader
+      container.innerHTML = "";
+      const loader = createEl("div", { class: "loader", text: "Loading…" });
+      container.appendChild(loader);
+
+      const iframe = document.createElement("iframe");
+      const autoplay = isAutoplay ? 1 : 0;
+      const encodedId = encodeURIComponent(String(video.id));
+      iframe.src = `https://iframe.mediadelivery.net/embed/661508/${encodedId}?autoplay=${autoplay}&muted=true&playsinline=true&responsive=true`;
+      iframe.allow = "autoplay; fullscreen";
+      iframe.allowFullscreen = true;
+      iframe.title = `Video: ${chooseLang(video.title) || "Embedded video"}`;
+      iframe.style.width = "100%";
+      iframe.style.height = "100%";
+      iframe.style.border = "none";
+      iframe.loading = "lazy";
+      iframe.style.opacity = "0";
+      iframe.style.transition = "opacity 0.4s ease";
+
+      container.appendChild(iframe);
+
+      // load timeout fallback
+      const loadTimeout = setTimeout(() => {
+        const loaderEl = container.querySelector(".loader");
+        if (loaderEl) loaderEl.textContent = "Unable to load video";
+      }, IFRAME_LOAD_TIMEOUT);
+
+      iframe.onload = () => {
+        clearTimeout(loadTimeout);
+        const loaderEl = container.querySelector(".loader");
+        if (loaderEl) loaderEl.remove();
+        requestAnimationFrame(() => { iframe.style.opacity = "1"; });
+        this.activePlayerIndex = index;
+      };
+
+      iframe.onerror = () => {
+        clearTimeout(loadTimeout);
+        const loaderEl = container.querySelector(".loader");
+        if (loaderEl) loaderEl.textContent = "Unable to load video";
+      };
+    }
+
+    resolveStartIndexAndActivate() {
+      // Resolve start index using startId or startIndexParam after carouselVideos built
+      let resolved = 0;
+
+      if (startId) {
+        const found = this.carouselVideos.findIndex(v => String(v.id) === startId);
+        if (found >= 0) resolved = found;
+      } else if (startIndexParam !== null && Number.isFinite(startIndexParam)) {
+        const originalItem = this.videoData[startIndexParam];
+        if (originalItem) {
+          const mapped = this.carouselVideos.findIndex(v => v.id === originalItem.id);
+          if (mapped >= 0) resolved = mapped;
+        }
+      }
+
+      resolved = Math.max(0, Math.min(resolved, Math.max(0, this.carouselVideos.length - 1)));
+      this.resolvedStartIndex = resolved;
+
+      // Scroll and activate on next frame to ensure layout
+      requestAnimationFrame(() => {
+        this.scrollToIndex(this.resolvedStartIndex);
+        this.updateActiveDot(this.resolvedStartIndex);
+        this.activateVideo(this.resolvedStartIndex);
+      });
+    }
+
+    handleUnload() {
+      window.addEventListener("beforeunload", () => {
+        if (this.observer) this.observer.disconnect();
+      });
+    }
   }
-);
 
-// Observe sections
-document.querySelectorAll(".carousel-section").forEach(section => {
-  if (!section.classList.contains("end-section")) {
-    observer.observe(section);
-  }
-});
-
-// ----------------------------
-// Scroll to Start
-// ----------------------------
-
-function scrollToStart() {
-  const section = document.querySelector(
-    `.carousel-section[data-index="${startIndex}"]`
-  );
-
-  if (section) {
-    section.scrollIntoView({ behavior: "auto" });
-  }
-}
-
-scrollToStart();
-updateActiveDot(startIndex);
+  // Kick off
+  const carouselInstance = new Carousel({ rootSelector: "#carousel", navSelector: ".chapter-nav" });
+  carouselInstance.init().catch(err => console.error("Carousel init error:", err));
+})();

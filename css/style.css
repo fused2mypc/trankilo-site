@@ -51,10 +51,23 @@ button {
   object-fit: cover;
 }
 
+/* About page video correction */
+.about-page .background-video {
+  filter:
+    saturate(0.35)
+    brightness(0.55)
+    contrast(1.05);
+}
+
 /* Ensure all other content stacks above background */
 body > *:not(.bg-layer) {
   position: relative;
   z-index: 1;
+}
+
+:root {
+  --blur-x: -10px;
+  --blur-y: 8px;
 }
 
 /* =========================
@@ -65,8 +78,8 @@ body > *:not(.bg-layer) {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+
   gap: clamp(30px, 3vh, 42px);
-  height: 100vh;
 }
 
 .menu-button {
@@ -74,7 +87,7 @@ body > *:not(.bg-layer) {
   background: none;
   border: none;
   color: white;
-  font-size: clamp(28px, 4vw, 72px);
+  font-size: clamp(20px, 2.5vw, 48px);
   font-style: italic;
   text-transform: lowercase;
   cursor: pointer;
@@ -103,6 +116,78 @@ body > *:not(.bg-layer) {
 
 .menu-spacer {
   height: 40px;
+}
+
+.page-content {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.title-block {
+  height: 40vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.title-stack {
+  position: relative;
+  display: inline-block;
+}
+
+/* Base title styling */
+.title-name {
+  font-family: "IM Fell DW Pica", serif;
+  font-size: clamp(48px, 7.5vw, 96px);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+  color: white;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.9);
+}
+
+/* Blur layer */
+.title-name.blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  transform: translate(var(--blur-x), var(--blur-y));
+
+  filter: blur(8px);
+  opacity: 0.6;
+
+  z-index: 0;
+}
+
+/* Name staggering */
+.first-name {
+  display: inline-block;
+  transform: translateY(-4%);
+}
+
+.last-name {
+  display: inline-block;
+  margin-left: 0em;
+  transform: translateY(4%);
+  position: relative;
+}
+
+/* "Editor" label */
+.title-sub {
+  position: absolute;
+  right: 0;
+  bottom: -0.3em;
+
+  font-family: "IM Fell DW Pica", serif;
+  font-size: clamp(12px, 1.5vw, 22px);
+  letter-spacing: 0.11em;
+  white-space: nowrap;
+
+  opacity: 0.85;
 }
 
 /* =========================
@@ -259,6 +344,12 @@ body > *:not(.bg-layer) {
 /* =========================
    About Page
    ========================= */
+
+/* Fullscreen centered menu pages */
+.special-page .menu-container {
+  min-height: 100vh;
+}
+
 .about-container {
   max-width: 700px;
   margin: 0 auto;

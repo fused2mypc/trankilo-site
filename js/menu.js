@@ -1,5 +1,3 @@
-// js/dvd-fade.js
-// Simple universal DVD-style short play and fade for any page with a background video
 (function () {
   const FADE_DURATION = 0.1; // seconds for fade
   const PLAY_TIME = 2;       // seconds to play video before navigation
@@ -27,7 +25,10 @@
       });
 
       // Fade menu buttons immediately
-      document.querySelectorAll(".menu-button").forEach(btn => fadeElement(btn, FADE_DURATION));
+      // Fade menu buttons + title immediately
+      document.querySelectorAll(".menu-button, .title-block, .about-container").forEach(el => {
+        fadeElement(el, FADE_DURATION);
+      });
 
       // If no video, navigate after button fade
       if (!bgVideo || isNaN(bgVideo.duration)) {
