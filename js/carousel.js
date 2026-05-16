@@ -288,6 +288,12 @@
     }
   }
 
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      location.reload();
+    }
+  });
+
   // Kick off
   const carouselInstance = new Carousel({ rootSelector: "#carousel", navSelector: ".chapter-nav" });
   carouselInstance.init().catch(err => console.error("Carousel init error:", err));

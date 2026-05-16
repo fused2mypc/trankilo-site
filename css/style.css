@@ -80,6 +80,7 @@ body > *:not(.bg-layer) {
   align-items: center;
 
   gap: clamp(30px, 3vh, 42px);
+
 }
 
 .menu-button {
@@ -346,6 +347,7 @@ body > *:not(.bg-layer) {
    ========================= */
 
 /* Fullscreen centered menu pages */
+.language-page .menu-container,
 .special-page .menu-container {
   min-height: 100vh;
 }
