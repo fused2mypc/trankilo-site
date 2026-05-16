@@ -3,6 +3,19 @@
   const PLAY_TIME = 2;       // seconds to play video before navigation
   const CLICKABLE_SELECTORS = ".menu-button, .project-card";
 
+  // =========================
+  // SPA navigation helper (NO reload)
+  // =========================
+  function navigate(target) {
+    window.history.pushState({}, "", target);
+    window.dispatchEvent(new Event("locationchange"));
+  }
+
+  // Handle browser back/forward
+  window.addEventListener("popstate", () => {
+    window.dispatchEvent(new Event("locationchange"));
+  });
+
   // Helper: fade an element
   function fadeElement(el, duration) {
     el.style.transition = `opacity ${duration}s ease`;
@@ -24,28 +37,28 @@
         btn.style.pointerEvents = "none";
       });
 
-      // Fade menu buttons immediately
       // Fade menu buttons + title immediately
       document.querySelectorAll(".menu-button, .title-block, .about-container").forEach(el => {
         fadeElement(el, FADE_DURATION);
       });
 
-      // If no video, navigate after button fade
+      // If no video, navigate after fade
       if (!bgVideo || isNaN(bgVideo.duration)) {
-        setTimeout(() => window.location.href = target, FADE_DURATION * 1000);
+        setTimeout(() => navigate(target), FADE_DURATION * 1000);
         return;
       }
 
       const startTransition = () => {
-        bgVideo.currentTime = 0; // restart video
+        bgVideo.currentTime = 0;
         bgVideo.play();
 
-        // After PLAY_TIME seconds, fade video and navigate
         setTimeout(() => {
           fadeElement(bgVideo, FADE_DURATION);
+
           setTimeout(() => {
-            window.location.href = target;
+            navigate(target);
           }, FADE_DURATION * 1000);
+
         }, PLAY_TIME * 1000);
       };
 

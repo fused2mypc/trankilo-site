@@ -141,13 +141,10 @@ body > *:not(.bg-layer) {
 /* Base title styling */
 .title-name {
   font-family: "IM Fell DW Pica", serif;
-  font-size: clamp(48px, 7.5vw, 96px);
-  letter-spacing: 0.05em;
+  font-size: clamp(36px, 6vw, 84px);
+  letter-spacing: 0.03em;
   white-space: nowrap;
-  position: relative;
-  z-index: 1;
-  color: white;
-  -webkit-text-stroke: 1px rgba(255,255,255,0.9);
+  max-width: 100vw;
 }
 
 /* Blur layer */
@@ -365,6 +362,7 @@ body > *:not(.bg-layer) {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
+  align-items: start;
 }
 
 .about-text {
@@ -380,11 +378,14 @@ body > *:not(.bg-layer) {
 .about-image {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .about-image img {
   width: 100%;
+  max-width: 320px;
   height: auto;
+  object-fit: contain;
 }
 
 .about-links {
@@ -456,3 +457,13 @@ body > *:not(.bg-layer) {
 @keyframes spin {
   to { transform: rotate(360deg); }
 } 
+
+@media (max-width: 768px) {
+  .about-top {
+    grid-template-columns: 1fr;
+  }
+
+  .about-image img {
+    max-width: 70vw;
+  }
+}
