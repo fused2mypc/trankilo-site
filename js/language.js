@@ -1,4 +1,3 @@
-// language.js
 const links = document.querySelectorAll(".lang-link");
 
 links.forEach(link => {
@@ -11,10 +10,6 @@ links.forEach(link => {
   });
 });
 
-// language.js
-
-// -----------------------------
-// Translation dictionary
 // -----------------------------
 const translations = {
   en: { langHeader:"Language Selection", about:"About Me", special:"Special Features", playAll:"Play All", projects:"Project Selection", email:"Email", vimeo:"Vimeo", en:"English", es:"Spanish", fr:"French", pl:"Polish", menu: "Main Menu", bts: "Behind the Scenes", reel: "Reel",
@@ -27,9 +22,7 @@ const translations = {
         aboutMe: "Jestem pasjonatem kina i horroru oraz miłośnikiem postprodukcji.\n\nMoja twórczość dotyczy bezpieczeństwa i terroru. Strach to jedno z najsilniejszych pierwotnych odczuć i chcę przypominać widzom o jego stałej obecności.\n\nDorastałem zarówno w Dallas (Teksas), jak i w Cuencamé (DGO), Meksyk, i studiowałem Film i Postprodukcję na DePaul University w Chicago (IL). Pracuję nad projektami filmowymi od 2022 roku.\n\nInteresują mnie historie o duchach i potworach oraz odsłanianie tragicznej ludzkiej natury kryjącej się za naszymi konstrukcjami strasznych opowieści.\n\nPrzede wszystkim chcę tworzyć opowieści wspólnie z innymi filmowcami, rozwijając jednocześnie własny głos jako twórca horroru." },
   };
 
-// -----------------------------
 // Apply translations with line-break support
-// -----------------------------
 function applyLanguage(lang) {
   const dict = translations[lang];
   if (!dict) return;
@@ -54,9 +47,7 @@ function applyLanguage(lang) {
   });
 }
 
-// -----------------------------
 // Auto-load saved language
-// -----------------------------
 document.addEventListener("DOMContentLoaded", () => {
   const lang = localStorage.getItem("siteLanguage") || "en";
   applyLanguage(lang);

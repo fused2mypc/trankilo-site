@@ -23,7 +23,7 @@ window.addEventListener("keydown", (e) => {
   if (
     e.repeat ||
     isCarouselLocked() ||
-    !["ArrowUp","ArrowDown","Enter","Escape","PageUp","PageDown","Tab"].includes(e.key)
+    !allowedKeys.includes(e.key)
   ) return;
   
   const isCarousel = document.body.classList.contains("carousel-page");

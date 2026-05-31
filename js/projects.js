@@ -1,9 +1,11 @@
+import { videoData } from "./data.js";
+
 const projectList = document.getElementById("project-list");
 const currentLang = localStorage.getItem("siteLanguage") || "en";
 
 function buildProjects() {
-  window.videoData.forEach((video, index) => {
-    if (video.reel) return; // skip the reel
+  videoData.forEach((video, index) => {
+    if (video.reel) return;
 
     const card = document.createElement("div");
     card.className = "project-card";

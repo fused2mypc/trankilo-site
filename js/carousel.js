@@ -82,6 +82,7 @@ class Carousel {
     this.filterVideos();
     this.buildSections();
     this.buildNavDots();
+    this.setupScrollActivation();
     this.resolveStartIndexAndActivate();
     this.handleUnload();
   }
@@ -99,14 +100,15 @@ class Carousel {
 
     if (wantReel) {
       this.carouselVideos =
-        this.videoData.filter(v => Boolean(v.reel) === true);
+      this.videoData.filter(v => Boolean(v.reel) === true);
 
     } else if (wantAll) {
-      this.carouselVideos = this.videoData.slice();
+      this.carouselVideos =
+      this.videoData.filter(v => !v.reel);
 
     } else {
       this.carouselVideos =
-        this.videoData.filter(v => !v.reel);
+      this.videoData.filter(v => !v.reel);
     }
   }
 
@@ -243,7 +245,14 @@ class Carousel {
     iframe.allow = "autoplay; fullscreen";
     iframe.allowFullscreen = true;
     iframe.title = `Video: ${chooseLang(video.title) || "Embedded video"}`;
-    iframe.loading = "lazy";
+    iframe.loading = "eager";
+
+    requestAnimationFrame(() => {
+    iframe.style.opacity = "1";
+    iframe.style.visibility = "visible";
+    iframe.style.filter = "none";
+    iframe.style.transform = "none";
+    });
 
     const loadTimeout = setTimeout(() => {
       const loaderEl = container.querySelector(".loader");
@@ -309,6 +318,40 @@ class Carousel {
   handleUnload() {
     window.addEventListener("beforeunload", () => {
       this.observer?.disconnect();
+    });
+  }
+
+  setupScrollActivation() {
+
+  this.root.addEventListener("scroll", () => {
+
+    const sections =
+      this.root.querySelectorAll(".carousel-section[data-index]");
+
+    const viewportCenter = window.innerHeight / 2;
+
+    let closestIndex = 0;
+    let closestDistance = Infinity;
+
+    sections.forEach((section, index) => {
+
+      const rect = section.getBoundingClientRect();
+
+      const center =
+        rect.top + rect.height / 2;
+
+      const distance =
+        Math.abs(viewportCenter - center);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    this.updateActiveDot(closestIndex);
+    this.activateVideo(closestIndex);
+
     });
   }
 }

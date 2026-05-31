@@ -1,11 +1,15 @@
-  const TRANSITION_DURATION = 800;
-  let isTransitioning = false;
+const TRANSITION_DURATION = 800;
+const CLICKABLE_SELECTORS =
+  ".menu-button:not(.lang-link), .project-card";
+
 
   document.querySelectorAll(CLICKABLE_SELECTORS).forEach(el => {
     
     el.addEventListener("click", (e) => {
       e.preventDefault();
-      if (isTransitioning) return;
+      if (document.body.classList.contains("is-transitioning")) {
+        return;
+      }
 
       const target =
         el.getAttribute("data-target") ||
@@ -13,7 +17,6 @@
 
       if (!target) return;
 
-      isTransitioning = true;
       document.body.classList.add("is-transitioning");
 
       setTimeout(() => {
