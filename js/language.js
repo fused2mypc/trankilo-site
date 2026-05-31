@@ -38,8 +38,6 @@ function applyLanguage(lang) {
   function setText(el, key) {
     if (key && dict[key]) {
       el.textContent = dict[key];          // insert text
-      el.style.whiteSpace = "pre-wrap";    // respect \n
-      el.style.wordBreak = "break-word";   // prevent overflow
     }
   }
 
@@ -55,18 +53,6 @@ function applyLanguage(lang) {
     setText(link, key);
   });
 }
-
-// -----------------------------
-// Language link clicks
-// -----------------------------
-document.querySelectorAll(".lang-link").forEach(link => {
-  link.addEventListener("click", e => {
-    e.preventDefault();
-    const lang = link.dataset.lang;
-    localStorage.setItem("siteLanguage", lang);
-    applyLanguage(lang); // update current page immediately
-  });
-});
 
 // -----------------------------
 // Auto-load saved language

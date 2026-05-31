@@ -21,7 +21,7 @@ function buildProjects() {
     `;
 
     card.addEventListener("click", () => {
-      window.location.href = `play.html?mode=project&start=${index}`;
+      window.location.href = `carousel.html?mode=project&start=${index}`;
     });
 
     projectList.appendChild(card);

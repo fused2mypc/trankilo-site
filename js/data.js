@@ -1,9 +1,7 @@
-(function (global) {
-  const fallbackLang = "en";
-  const supportedLangs = ["en", "es", "fr", "pl"];
+const fallbackLang = "en";
+const supportedLangs = ["en", "es", "fr", "pl"];
 
-  // Centralized category dictionary (add new categories here)
-  // Key => translations object (or single string, will be normalized)
+// Centralized category dictionary
   const categoryDefsRaw = {
     compilation: { en: "compilation", es: "Montaje", fr: "Montage", pl: "Montaż" },
     horror: { en: "horror", es: "terror", fr: "horreur", pl: "horror" },
@@ -141,39 +139,40 @@
   ];
 
   // ----------------------------
-  // NORMALIZATION
-  // ----------------------------
-  function normalizeTranslations(field) {
-    if (typeof field === "string") {
-      const out = {};
-      supportedLangs.forEach(l => out[l] = field);
-      return out;
-    }
-
+// NORMALIZATION
+// ----------------------------
+function normalizeTranslations(field) {
+  if (typeof field === "string") {
     const out = {};
-    supportedLangs.forEach(l => {
-      if (field && typeof field[l] === "string") out[l] = field[l];
-      else if (field && typeof field[fallbackLang] === "string") out[l] = field[fallbackLang];
-      else {
-        const fallback = field && Object.values(field).find(v => typeof v === "string");
-        out[l] = fallback || "";
-      }
-    });
-
+    supportedLangs.forEach(l => out[l] = field);
     return out;
   }
 
-  const categoryDefs = {};
-  Object.keys(categoryDefsRaw).forEach(key => {
-    categoryDefs[key] = normalizeTranslations(categoryDefsRaw[key]);
+  const out = {};
+  supportedLangs.forEach(l => {
+    if (field && typeof field[l] === "string") out[l] = field[l];
+    else if (field && typeof field[fallbackLang] === "string") out[l] = field[fallbackLang];
+    else {
+      const fallback = field && Object.values(field).find(v => typeof v === "string");
+      out[l] = fallback || "";
+    }
   });
 
-  function resolveCategoryField(categoryField) {
-    if (typeof categoryField === "string" && categoryDefs[categoryField]) {
-      return categoryDefs[categoryField];
-    }
-    return normalizeTranslations(categoryField || "");
+  return out;
+}
+
+const categoryDefs = {};
+
+Object.keys(categoryDefsRaw).forEach(key => {
+  categoryDefs[key] = normalizeTranslations(categoryDefsRaw[key]);
+});
+
+function resolveCategoryField(categoryField) {
+  if (typeof categoryField === "string" && categoryDefs[categoryField]) {
+    return categoryDefs[categoryField];
   }
+  return normalizeTranslations(categoryField || "");
+}
 
 function normalizeEntry(entry) {
   return {
@@ -181,83 +180,70 @@ function normalizeEntry(entry) {
     title: normalizeTranslations(entry.title || ""),
     category: resolveCategoryField(entry.category || ""),
     description: normalizeTranslations(entry.description || ""),
-    reel: !!entry.reel   // ensure it's a boolean, default false
+    reel: !!entry.reel
   };
 }
 
-  const videoData = rawVideoData.map(normalizeEntry);
+// ----------------------------
+// DATASET
+// ----------------------------
+const videoData = rawVideoData.map(normalizeEntry);
 
-  // ----------------------------
-  // DATASETS (NEW CLEAN LAYER)
-  // ----------------------------
-  const videoSets = {
-    all: videoData,
+const videoSets = {
+  all: videoData,
 
-    reel: rawVideoData.filter(v => v.reel === true).length
-      ? rawVideoData.filter(v => v.reel === true).map(normalizeEntry)
-      : [videoData[0]] // fallback: first item is reel
-  };
+  reel: rawVideoData.filter(v => v.reel === true).length
+    ? rawVideoData.filter(v => v.reel === true).map(normalizeEntry)
+    : [videoData[0]]
+};
 
-  // ----------------------------
-  // HELPERS
-  // ----------------------------
-  function getLocalized(item, fieldName, lang = fallbackLang) {
-    if (!item || !fieldName) return "";
-    const field = item[fieldName];
-    if (!field) return "";
-    if (typeof field === "string") return field;
-    return field[lang] ?? field[fallbackLang] ?? Object.values(field).find(Boolean) ?? "";
-  }
+// ----------------------------
+// HELPERS
+// ----------------------------
+function getLocalized(item, fieldName, lang = fallbackLang) {
+  if (!item || !fieldName) return "";
+  const field = item[fieldName];
+  if (!field) return "";
+  if (typeof field === "string") return field;
+  return field[lang] ?? field[fallbackLang] ?? Object.values(field).find(Boolean) ?? "";
+}
 
-  function addCategory(key, translations) {
-    categoryDefs[key] = normalizeTranslations(translations || key);
+function addCategory(key, translations) {
+  categoryDefs[key] = normalizeTranslations(translations || key);
 
-    videoData.forEach((v, i) => {
-      const raw = rawVideoData[i]?.category;
-      if (raw === key) v.category = categoryDefs[key];
-    });
+  videoData.forEach((v, i) => {
+    const raw = rawVideoData[i]?.category;
+    if (raw === key) v.category = categoryDefs[key];
+  });
 
-    return categoryDefs[key];
-  }
+  return categoryDefs[key];
+}
 
-  function addEntry(entry) {
-    rawVideoData.push(entry);
-    const normalized = normalizeEntry(entry);
-    videoData.push(normalized);
-    return normalized;
-  }
+function addEntry(entry) {
+  rawVideoData.push(entry);
+  const normalized = normalizeEntry(entry);
+  videoData.push(normalized);
+  return normalized;
+}
 
-  function replaceAll(newRawData) {
-    if (!Array.isArray(newRawData)) throw new TypeError("replaceAll expects an array");
+function replaceAll(newRawData) {
+  if (!Array.isArray(newRawData)) throw new TypeError("replaceAll expects an array");
 
-    rawVideoData.length = 0;
-    newRawData.forEach(v => rawVideoData.push(v));
+  rawVideoData.length = 0;
+  newRawData.forEach(v => rawVideoData.push(v));
 
-    videoData.length = 0;
-    newRawData.map(normalizeEntry).forEach(v => videoData.push(v));
-  }
+  videoData.length = 0;
+  newRawData.map(normalizeEntry).forEach(v => videoData.push(v));
+}
 
-  // ----------------------------
-  // PUBLIC API
-  // ----------------------------
-  const API = {
-    videoData,
-    videoSets,
-
-    categoryDefs,
-    getLocalized,
-
-    addCategory,
-    addEntry,
-    replaceAll,
-
-    supportedLangs: [...supportedLangs],
-    fallbackLang
-  };
-
-  global.videoDataModule = API;
-  global.videoData = API.videoData;
-  global.videoSets = API.videoSets;
-  global.categoryDefs = API.categoryDefs;
-
-})(window);
+export {
+  videoData,
+  videoSets,
+  categoryDefs,
+  getLocalized,
+  addCategory,
+  addEntry,
+  replaceAll,
+  supportedLangs,
+  fallbackLang
+};
