@@ -1,10 +1,6 @@
-// carousel.js (ES MODULE)
-
-// Config
 const IFRAME_LOAD_TIMEOUT = 8000;
 const DEFAULT_LANG = "en";
 
-// Parse URL params
 const params = new URLSearchParams(window.location.search);
 
 const startIndexParam = params.has("start")
@@ -18,10 +14,8 @@ const isAutoplay = mode === "all";
 const currentLang =
   localStorage.getItem("siteLanguage") || DEFAULT_LANG;
 
-// NOTE: imported from module instead of window
 import { videoData as importedVideoData } from "./data.js";
 
-// Utility helpers
 const chooseLang = (obj) =>
   (obj && obj[currentLang])
     ? obj[currentLang]
@@ -68,8 +62,6 @@ class Carousel {
 
     this.activePlayerIndex = null;
     this.resolvedStartIndex = 0;
-
-    this.dots = [];
   }
 
   async init() {
@@ -81,7 +73,6 @@ class Carousel {
 
     this.filterVideos();
     this.buildSections();
-    this.buildNavDots();
     this.setupScrollActivation();
     this.resolveStartIndexAndActivate();
     this.handleUnload();
@@ -89,28 +80,27 @@ class Carousel {
 
   filterVideos() {
 
-    const reelParam = params.get("reel");
-    const normalizedMode = String(mode || "").toLowerCase();
+  const reelParam = params.get("reel");
 
-    const wantReel =
-      normalizedMode === "reel" ||
-      ["1", "true"].includes(reelParam);
+  const wantReel =
+    mode === "reel" ||
+    ["1", "true"].includes(reelParam);
 
-    const wantAll = normalizedMode === "all";
-
-    if (wantReel) {
-      this.carouselVideos =
-      this.videoData.filter(v => Boolean(v.reel) === true);
-
-    } else if (wantAll) {
-      this.carouselVideos =
-      this.videoData.filter(v => !v.reel);
-
-    } else {
-      this.carouselVideos =
-      this.videoData.filter(v => !v.reel);
-    }
+  if (wantReel) {
+    this.carouselVideos =
+      this.videoData.filter(v => v.reel === true);
+    return;
   }
+
+  const setName = params.get("set") || "horror";
+
+  this.carouselVideos =
+    this.videoData.filter(
+      v => v.set === setName && !v.reel
+    );
+
+    console.log(this.carouselVideos);
+}
 
   buildSections() {
 
@@ -173,28 +163,6 @@ class Carousel {
     this.root.appendChild(endSection);
   }
 
-  buildNavDots() {
-
-    if (!this.nav) return;
-
-    this.nav.innerHTML = "";
-    this.dots = [];
-
-    this.carouselVideos.forEach((_, index) => {
-
-      const dot = createEl("button", {
-        class: "chapter-dot",
-        type: "button",
-        "aria-label": `Go to chapter ${index + 1}`
-      });
-
-      dot.addEventListener("click", () => this.scrollToIndex(index));
-
-      this.nav.appendChild(dot);
-      this.dots.push(dot);
-    });
-  }
-
   scrollToIndex(index) {
     const section =
       this.root.querySelector(
@@ -203,13 +171,6 @@ class Carousel {
 
     if (section) {
       section.scrollIntoView({ behavior: "auto" });
-    }
-  }
-
-  updateActiveDot(index) {
-    this.dots.forEach(d => d.classList.remove("active"));
-    if (this.dots[index]) {
-      this.dots[index].classList.add("active");
     }
   }
 
@@ -310,7 +271,6 @@ class Carousel {
 
     requestAnimationFrame(() => {
       this.scrollToIndex(resolved);
-      this.updateActiveDot(resolved);
       this.activateVideo(resolved);
     });
   }
@@ -349,7 +309,6 @@ class Carousel {
       }
     });
 
-    this.updateActiveDot(closestIndex);
     this.activateVideo(closestIndex);
 
     });

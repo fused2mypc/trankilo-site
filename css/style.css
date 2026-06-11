@@ -76,8 +76,8 @@ body > *:not(.bg-layer) {
 }
 
 :root {
-  --blur-x: -10px;
-  --blur-y: 8px;
+  --blur-x: -40px;
+  --blur-y: 30px;
   --project-thumb-width: clamp(150px, 18vw, 240px);
   --project-gap: 24px;
   --transition-fast: 0.2s;
@@ -280,6 +280,7 @@ body.is-transitioning .carousel {
   font-size: 14px;
   opacity: 0.7;
   line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 /* =========================
@@ -301,7 +302,8 @@ body.is-transitioning .carousel {
   transition:
     transform var(--transition-fast) ease,
     opacity var(--transition-fast) ease;
-  width: var(--project-thumb-width);
+  width: 100%;
+  max-width: 100%;
 }
 
 .project-card:hover {
@@ -327,6 +329,7 @@ body.is-transitioning .carousel {
 }
 
 .project-info {
+  min-width: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -341,6 +344,24 @@ body.is-transitioning .carousel {
   text-overflow: ellipsis;
   line-height: 1.25;
   margin-bottom: 4px;
+}
+
+.project-title span {
+  display: inline-block;
+}
+
+.project-title.scrolling span {
+  animation: title-scroll 4s ease-in-out infinite alternate;
+}
+
+@keyframes title-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-1 * var(--overflow)));
+  }
 }
 
 .project-description {
@@ -482,4 +503,32 @@ body.is-transitioning .carousel {
   .about-image img {
     max-width: 70vw;
   }
+
+@media (max-width: 768px) {
+
+  .project-list {
+    padding: 24px 12px;
+  }
+
+  .project-card {
+    gap: 12px;
+  }
+
+  :root {
+    --project-thumb-width: 110px;
+  }
+
+  .project-title {
+    font-size: 0.85rem;
+  }
+
+  .project-description {
+    font-size: 0.55rem;
+  }
+
+  .project-runtime {
+    font-size: 0.65rem;
+  }
+}
+
 }

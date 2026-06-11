@@ -28,10 +28,6 @@ window.addEventListener("keydown", (e) => {
   
   const isCarousel = document.body.classList.contains("carousel-page");
 
-  // ------------------------------------------------
-  // MENU / LIST NAVIGATION
-  // ------------------------------------------------
-
   if (!isCarousel) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -49,10 +45,6 @@ window.addEventListener("keydown", (e) => {
     }
     return;
   }
-
-  // ------------------------------------------------
-  // CAROUSEL NAVIGATION
-  // ------------------------------------------------
 
   if (e.key === "ArrowDown" || e.key === "PageDown") {
 

@@ -7,10 +7,6 @@ let currentY = 8;
 const strength = 14;
 const smoothing = 0.08;
 
-// ----------------------------------
-// Pointer Tracking
-// ----------------------------------
-
 window.addEventListener("pointermove", (e) => {
 
   const xPercent = (e.clientX / window.innerWidth) - 0.5;
@@ -19,10 +15,6 @@ window.addEventListener("pointermove", (e) => {
   targetX = -xPercent * strength;
   targetY = -yPercent * strength;
 });
-
-// ----------------------------------
-// Animation Loop
-// ----------------------------------
 
 function animateBlur() {
 
